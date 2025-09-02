@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Add Expense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Add Expense</h1>
+    <button onclick="location.href='index.html'">← Back</button>
+  </header>
+
+  <main>
+    <form id="expense-form">
+      <label>Expense Name<br>
+        <input id="expenseName" name="expenseName" required>
+      </label>
+
+      <label>Expense Type<br>
+        <input id="expenseType" name="expenseType" required>
+      </label>
+
+      <label>Price<br>
+        <input id="price" name="price" type="number" step="1" min="1" required>
+      </label>
+
+      <label>Date<br>
+        <input id="date" name="date" type="date" required>
+      </label>
+
+      <button type="submit">Add</button>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

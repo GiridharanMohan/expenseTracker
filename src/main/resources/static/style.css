@@ -1,0 +1,33 @@
+body {
+  font-family: Arial, sans-serif;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 12px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 { margin: 0; color: #1f6feb; }
+
+button { padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+
+table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th { background:#f6f8ff; text-align:left; }
+
+form { display: grid; gap: 12px; max-width: 420px; margin-top: 16px; }
+label { display:block; }
+input { width: 100%; padding: 8px; box-sizing: border-box; }
