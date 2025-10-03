@@ -19,7 +19,7 @@ public class ExpenseInfoController {
     @Autowired
     ExpenseInfoService expenseInfoService;
 
-    @GetMapping()
+    @GetMapping("/")
     public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
         return expenseInfoService.getAllExpense();
     }
