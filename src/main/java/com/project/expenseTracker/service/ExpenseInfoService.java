@@ -36,7 +36,7 @@ public class ExpenseInfoService {
         return ResponseEntity.status(HttpStatus.OK).body(msg);
     }
 
-    public ResponseEntity<String> updateExpense(ExpenseInfo expense, int id) {
+    public ResponseEntity<String> updateExpense(ExpenseInfo expense, UUID id) {
         log.info("Beginning of updateExpense()");
         Optional<ExpenseInfo> optionalExpenseInfo = expenseInfoRepo.findById(id);
         String msg = "Failed to update, invalid ID!!";
@@ -53,12 +53,12 @@ public class ExpenseInfoService {
         return ResponseEntity.status(HttpStatus.OK).body(msg);
     }
 
-    public ResponseEntity<ExpenseInfo> getExpense(int id) {
+    public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
         Optional<ExpenseInfo> expense = expenseInfoRepo.findById(id);
         return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    public ResponseEntity<Object> deleteExpense(int id) {
+    public ResponseEntity<Object> deleteExpense(UUID id) {
         log.info("Beginning of deleteExpense()");
         Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findById(id);
         if (expenseInfo.isPresent()) {

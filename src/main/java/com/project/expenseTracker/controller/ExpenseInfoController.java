@@ -19,13 +19,13 @@ public class ExpenseInfoController {
     @Autowired
     ExpenseInfoService expenseInfoService;
 
-    @GetMapping()
+    @GetMapping("/")
     public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
         return expenseInfoService.getAllExpense();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ExpenseInfo> getExpense(@PathVariable int id) {
+    public ResponseEntity<ExpenseInfo> getExpense(@PathVariable UUID id) {
         return expenseInfoService.getExpense(id);
     }
 
@@ -36,13 +36,13 @@ public class ExpenseInfoController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<String> updateExpense(@Valid @RequestBody ExpenseInfo expense, @PathVariable int id) {
+    public ResponseEntity<String> updateExpense(@Valid @RequestBody ExpenseInfo expense, @PathVariable UUID id) {
         log.info("Expense: {}, ID: {}", expense, id);
         return expenseInfoService.updateExpense(expense, id);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Object> deleteExpense(@PathVariable int id) {
+    public ResponseEntity<Object> deleteExpense(@PathVariable UUID id) {
         log.info("ID: {}", id);
         return expenseInfoService.deleteExpense(id);
     }
