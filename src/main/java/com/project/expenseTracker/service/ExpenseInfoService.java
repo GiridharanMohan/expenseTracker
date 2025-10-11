@@ -4,6 +4,9 @@ import com.project.expenseTracker.model.ExpenseInfo;
 import com.project.expenseTracker.repository.ExpenseInfoRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -58,14 +61,19 @@ public class ExpenseInfoService {
         return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    //paginated
+//    public ResponseEntity<Page<ExpenseInfo>> getAllExpenseInPages(int page, int size) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        return ResponseEntity.status(HttpStatus.OK).body(expenseInfoRepo.findAll(pageable));
+//    }
+
     public ResponseEntity<Object> deleteExpense(UUID id) {
         log.info("Beginning of deleteExpense()");
         Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findById(id);
         if (expenseInfo.isPresent()) {
-            ExpenseInfo expense = expenseInfo.get();
             expenseInfoRepo.deleteById(id);
             log.info("End of deleteExpense()");
-            return ResponseEntity.status(HttpStatus.OK).body("Deleted successfully\n" + expense);
+            return ResponseEntity.status(HttpStatus.OK).body("Expense with ID: " + id + " deleted successfully");
         } else {
             log.error("Expense: {}, ID: {}", expenseInfo, id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Expense with ID: " + id + " not found");
