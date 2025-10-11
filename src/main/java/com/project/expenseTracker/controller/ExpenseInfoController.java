@@ -39,10 +39,10 @@ public class ExpenseInfoController {
     }
 
     //paginated
-    @GetMapping("/page")
-    public ResponseEntity<Page<ExpenseInfo>> getExpenseByPage(@RequestParam int page, @RequestParam int size) {
-        return expenseInfoService.getAllExpenseInPages(page, size);
-    }
+//    @GetMapping("/page")
+//    public ResponseEntity<Page<ExpenseInfo>> getExpenseByPage(@RequestParam int page, @RequestParam int size) {
+//        return expenseInfoService.getAllExpenseInPages(page, size);
+//    }
 
     @PostMapping("/add")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Expense created successfully"),
