@@ -61,7 +61,7 @@ public class ExpenseInfoController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Object> deleteExpense(@PathVariable UUID id) {
+    public ResponseEntity<String> deleteExpense(@PathVariable UUID id) {
         log.info("ID: {}", id);
         return expenseInfoService.deleteExpense(id);
     }
