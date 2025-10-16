@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -28,8 +29,9 @@ public class ExpenseInfo {
     @NotBlank(message = "Should not be empty")
     private String expenseType;
 
+    @NotBlank
     @Min(value = 1, message = "Should not be zero")
-    private float price;
+    private BigDecimal price;
 
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdOn;
