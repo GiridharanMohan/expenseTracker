@@ -23,14 +23,14 @@ public class ExpenseInfo {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "Should not be empty")
+    @NotBlank(message = "expense name Should not be empty")
     private String expenseName;
 
-    @NotBlank(message = "Should not be empty")
+    @NotBlank(message = "expense type Should not be empty")
     private String expenseType;
 
-    @NotBlank
-    @Min(value = 1, message = "Should not be zero")
+
+    @Min(value = 1, message = "price Should not be zero")
     private BigDecimal price;
 
     @Column(updatable = false, nullable = false)
@@ -38,4 +38,8 @@ public class ExpenseInfo {
 
     @Column(nullable = false)
     private LocalDateTime updatedOn;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }
