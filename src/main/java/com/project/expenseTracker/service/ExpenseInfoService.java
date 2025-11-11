@@ -26,6 +26,11 @@ public class ExpenseInfoService {
         return ResponseEntity.status(HttpStatus.OK).body(listOfExpenses);
     }
 
+    public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
+        Optional<ExpenseInfo> expense = expenseInfoRepo.findById(id);
+        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+    }
+
     public ResponseEntity<String> addExpense(ExpenseInfo expenseInfo) {
         log.info("Beginning of addExpense()");
         String msg = "Failed to add Expense, invalid expense.";
@@ -34,7 +39,7 @@ public class ExpenseInfoService {
             expenseInfo.setCreatedOn(LocalDateTime.now());
             expenseInfo.setUpdatedOn(LocalDateTime.now());
             expenseInfoRepo.save(expenseInfo);
-            msg = "Expense added successfully";
+            msg = "Expense with ID: " + expenseInfo.getId() + " created successfully";
             httpStatus = HttpStatus.OK;
         }
         log.info("End of addExpense()");
@@ -60,17 +65,6 @@ public class ExpenseInfoService {
         return ResponseEntity.status(httpStatus).body(msg);
     }
 
-    public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
-        Optional<ExpenseInfo> expense = expenseInfoRepo.findById(id);
-        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-    }
-
-    //paginated
-//    public ResponseEntity<Page<ExpenseInfo>> getAllExpenseInPages(int page, int size) {
-//        Pageable pageable = PageRequest.of(page, size);
-//        return ResponseEntity.status(HttpStatus.OK).body(expenseInfoRepo.findAll(pageable));
-//    }
-
     public ResponseEntity<String> deleteExpense(UUID id) {
         log.info("Beginning of deleteExpense()");
         Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findById(id);
@@ -83,4 +77,12 @@ public class ExpenseInfoService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Expense with ID: " + id + " not found");
         }
     }
+
+
+
+//    paginated
+//    public ResponseEntity<Page<ExpenseInfo>> getAllExpenseInPages(int page, int size) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        return ResponseEntity.status(HttpStatus.OK).body(expenseInfoRepo.findAll(pageable));
+//    }
 }
