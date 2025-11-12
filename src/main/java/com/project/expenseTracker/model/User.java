@@ -21,7 +21,7 @@ public class User {
 
     @NotBlank(message = "should not be empty")
     @Column(name = "user_name")
-    private String userName;
+    private String username;
 
     @NotBlank
     @Size(min = 8, message = "length should be at least 8 characters")
