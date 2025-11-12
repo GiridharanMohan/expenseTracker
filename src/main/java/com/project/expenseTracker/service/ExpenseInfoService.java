@@ -1,11 +1,15 @@
 package com.project.expenseTracker.service;
 
 import com.project.expenseTracker.model.ExpenseInfo;
+import com.project.expenseTracker.model.User;
 import com.project.expenseTracker.repository.ExpenseInfoRepo;
+import com.project.expenseTracker.repository.UserRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,15 +20,26 @@ import java.util.*;
 public class ExpenseInfoService {
 
     @Autowired
-    ExpenseInfoRepo expenseInfoRepo;
+    private ExpenseInfoRepo expenseInfoRepo;
+
+    @Autowired
+    private UserRepo userRepo;
 
     public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
-        List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAll();
+        Optional<User> user = getUserFromToken();
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAllExpenseByUser(user.get());
         return ResponseEntity.status(HttpStatus.OK).body(listOfExpenses);
     }
 
     public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
-        Optional<ExpenseInfo> expense = expenseInfoRepo.findById(id);
+        Optional<User> user = getUserFromToken();
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Optional<ExpenseInfo> expense = expenseInfoRepo.findByUserAndId(user.get(), id);
         return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
     }
 
@@ -73,6 +88,14 @@ public class ExpenseInfoService {
             log.error("Expense: {}, ID: {}", expenseInfo, id);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Expense with ID: " + id + " not found");
         }
+    }
+
+    private Optional<User> getUserFromToken() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return Optional.empty();
+        }
+        return userRepo.findByEmail(auth.getName());
     }
 
 
