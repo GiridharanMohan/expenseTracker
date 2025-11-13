@@ -1,8 +1,9 @@
 package com.project.expenseTracker.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,8 @@ public class ExpenseInfo {
     private String expenseType;
 
 
-    @Min(value = 1, message = "price Should not be zero")
+    @Digits(integer = 10, fraction = 2, message = "price Should not be zero")
+    @NotNull(message = "Only numbers allowed")
     private BigDecimal price;
 
     @Column(updatable = false, nullable = false)
