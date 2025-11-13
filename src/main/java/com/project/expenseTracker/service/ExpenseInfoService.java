@@ -1,15 +1,15 @@
 package com.project.expenseTracker.service;
 
+import com.project.expenseTracker.exception.ExpenseNotFoundException;
 import com.project.expenseTracker.model.ExpenseInfo;
 import com.project.expenseTracker.model.User;
 import com.project.expenseTracker.repository.ExpenseInfoRepo;
 import com.project.expenseTracker.repository.UserRepo;
+import com.project.expenseTracker.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,33 +25,34 @@ public class ExpenseInfoService {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
-        Optional<User> user = getUserFromToken();
-        if (user.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAllExpenseByUser(user.get());
+        User user = jwtUtil.getUserFromToken();
+        log.info("Fetching all expense for user : {}", user.getUsername());
+        List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAllExpenseByUser(user);
         return ResponseEntity.status(HttpStatus.OK).body(listOfExpenses);
     }
 
     public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
-        Optional<User> user = getUserFromToken();
-        if (user.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        Optional<ExpenseInfo> expense = expenseInfoRepo.findByUserAndId(user.get(), id);
-        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+        User user = jwtUtil.getUserFromToken();
+        log.info("Fetching expense for user : {}", user.getUsername());
+        Optional<ExpenseInfo> expense = expenseInfoRepo.findByUserAndId(user, id);
+        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
     }
 
     public ResponseEntity<String> addExpense(ExpenseInfo expenseInfo) {
-        log.info("Beginning of addExpense()");
+        User user = jwtUtil.getUserFromToken();
+        log.info("Adding expense for user : {}", user.getUsername());
         String msg = "Failed to add Expense, invalid expense.";
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         if (expenseInfo != null) {
             expenseInfo.setCreatedOn(LocalDateTime.now());
             expenseInfo.setUpdatedOn(LocalDateTime.now());
+            expenseInfo.setUser(user);
             expenseInfoRepo.save(expenseInfo);
-            msg = "Expense with ID: " + expenseInfo.getId() + " created successfully";
+            msg = "Expense added successfully";
             httpStatus = HttpStatus.OK;
         }
         log.info("End of addExpense()");
@@ -59,43 +60,35 @@ public class ExpenseInfoService {
     }
 
     public ResponseEntity<String> updateExpense(ExpenseInfo expense, UUID id) {
-        log.info("Beginning of updateExpense()");
-        Optional<ExpenseInfo> optionalExpenseInfo = expenseInfoRepo.findById(id);
-        String msg = "Failed to update, invalid ID!!";
-        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
-        if (optionalExpenseInfo.isPresent()) {
-            ExpenseInfo exp = optionalExpenseInfo.get();
-            exp.setExpenseName(expense.getExpenseName());
-            exp.setExpenseType(expense.getExpenseType());
-            exp.setUpdatedOn(LocalDateTime.now());
-            exp.setPrice(expense.getPrice());
-            expenseInfoRepo.save(exp);
-            msg = "successfully updated";
-            httpStatus = HttpStatus.OK;
+        User user = jwtUtil.getUserFromToken();
+        log.info("Updating expense for user : {}", user.getUsername());
+        Optional<ExpenseInfo> optionalExpenseInfo = expenseInfoRepo.findByUserAndId(user, id);
+        if (optionalExpenseInfo.isEmpty()) {
+            log.error("failed to update for user : {}", user.getUsername());
+            throw new ExpenseNotFoundException("Invalid ID, failed to update");
         }
+        ExpenseInfo exp = optionalExpenseInfo.get();
+        exp.setExpenseName(expense.getExpenseName());
+        exp.setExpenseType(expense.getExpenseType());
+        exp.setUpdatedOn(LocalDateTime.now());
+        exp.setPrice(expense.getPrice());
+        expenseInfoRepo.save(exp);
         log.info("End of updateExpense()");
-        return ResponseEntity.status(httpStatus).body(msg);
+        return ResponseEntity.status(HttpStatus.OK).body("Expense updated successfully");
     }
 
     public ResponseEntity<String> deleteExpense(UUID id) {
-        log.info("Beginning of deleteExpense()");
-        Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findById(id);
+        User user = jwtUtil.getUserFromToken();
+        log.info("Deleting expense for user : {}", user.getUsername());
+        Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findByUserAndId(user, id);
         if (expenseInfo.isPresent()) {
             expenseInfoRepo.deleteById(id);
             log.info("End of deleteExpense()");
             return ResponseEntity.status(HttpStatus.OK).body("Expense with ID: " + id + " deleted successfully");
         } else {
-            log.error("Expense: {}, ID: {}", expenseInfo, id);
+            log.error("ID: {}", id);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Expense with ID: " + id + " not found");
         }
-    }
-
-    private Optional<User> getUserFromToken() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return Optional.empty();
-        }
-        return userRepo.findByEmail(auth.getName());
     }
 
 
