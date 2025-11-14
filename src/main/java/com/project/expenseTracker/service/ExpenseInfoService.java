@@ -62,17 +62,13 @@ public class ExpenseInfoService {
     public ResponseEntity<String> updateExpense(ExpenseInfo expense, UUID id) {
         User user = jwtUtil.getUserFromToken();
         log.info("Updating expense for user : {}", user.getUsername());
-        Optional<ExpenseInfo> optionalExpenseInfo = expenseInfoRepo.findByUserAndId(user, id);
-        if (optionalExpenseInfo.isEmpty()) {
-            log.error("failed to update for user : {}", user.getUsername());
-            throw new ExpenseNotFoundException("Invalid ID, failed to update");
-        }
-        ExpenseInfo exp = optionalExpenseInfo.get();
-        exp.setExpenseName(expense.getExpenseName());
-        exp.setExpenseType(expense.getExpenseType());
-        exp.setUpdatedOn(LocalDateTime.now());
-        exp.setPrice(expense.getPrice());
-        expenseInfoRepo.save(exp);
+        ExpenseInfo expenseInfo = expenseInfoRepo.findByUserAndId(user, id)
+                .orElseThrow(() -> new ExpenseNotFoundException("Invalid ID, failed to update"));
+        expenseInfo.setExpenseName(expense.getExpenseName());
+        expenseInfo.setExpenseType(expense.getExpenseType());
+        expenseInfo.setUpdatedOn(LocalDateTime.now());
+        expenseInfo.setPrice(expense.getPrice());
+        expenseInfoRepo.save(expenseInfo);
         log.info("End of updateExpense()");
         return ResponseEntity.status(HttpStatus.OK).body("Expense updated successfully");
     }
@@ -80,15 +76,11 @@ public class ExpenseInfoService {
     public ResponseEntity<String> deleteExpense(UUID id) {
         User user = jwtUtil.getUserFromToken();
         log.info("Deleting expense for user : {}", user.getUsername());
-        Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findByUserAndId(user, id);
-        if (expenseInfo.isPresent()) {
-            expenseInfoRepo.deleteById(id);
-            log.info("End of deleteExpense()");
-            return ResponseEntity.status(HttpStatus.OK).body("Expense with ID: " + id + " deleted successfully");
-        } else {
-            log.error("ID: {}", id);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Expense with ID: " + id + " not found");
-        }
+        ExpenseInfo expenseInfo = expenseInfoRepo.findByUserAndId(user, id)
+                .orElseThrow(() -> new ExpenseNotFoundException("Invalid ID, expense not found"));
+        expenseInfoRepo.deleteById(expenseInfo.getId());
+        log.info("End of deleteExpense()");
+        return ResponseEntity.status(HttpStatus.OK).body("Expense deleted successfully");
     }
 
 
