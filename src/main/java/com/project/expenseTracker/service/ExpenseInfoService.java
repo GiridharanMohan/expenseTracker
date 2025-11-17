@@ -1,63 +1,92 @@
 package com.project.expenseTracker.service;
 
+import com.project.expenseTracker.exception.ExpenseNotFoundException;
 import com.project.expenseTracker.model.ExpenseInfo;
+import com.project.expenseTracker.model.User;
 import com.project.expenseTracker.repository.ExpenseInfoRepo;
-import jakarta.validation.Valid;
+import com.project.expenseTracker.repository.UserRepo;
+import com.project.expenseTracker.util.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 public class ExpenseInfoService {
 
     @Autowired
-    ExpenseInfoRepo expenseInfoRepo;
+    private ExpenseInfoRepo expenseInfoRepo;
+
+    @Autowired
+    private UserRepo userRepo;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
-        List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAll();
+        User user = jwtUtil.getUserFromToken();
+        log.info("Fetching all expense for user : {}", user.getUsername());
+        List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAllExpenseByUser(user);
         return ResponseEntity.status(HttpStatus.OK).body(listOfExpenses);
     }
 
+    public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
+        User user = jwtUtil.getUserFromToken();
+        log.info("Fetching expense for user : {}", user.getUsername());
+        Optional<ExpenseInfo> expense = expenseInfoRepo.findByUserAndId(user, id);
+        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
+    }
+
     public ResponseEntity<String> addExpense(ExpenseInfo expenseInfo) {
-        String msg = "Expense added successfully";
-        if(expenseInfo != null){
-            msg = "Expense added successfully";
+        User user = jwtUtil.getUserFromToken();
+        log.info("Adding expense for user : {}", user.getUsername());
+        String msg = "Failed to add Expense, invalid expense.";
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        if (expenseInfo != null) {
+            expenseInfo.setCreatedOn(LocalDateTime.now());
+            expenseInfo.setUpdatedOn(LocalDateTime.now());
+            expenseInfo.setUser(user);
             expenseInfoRepo.save(expenseInfo);
+            msg = "Expense added successfully";
+            httpStatus = HttpStatus.OK;
         }
-        return ResponseEntity.status(HttpStatus.OK).body(msg);
+        log.info("End of addExpense()");
+        return ResponseEntity.status(httpStatus).body(msg);
     }
 
-    public ResponseEntity<String> updateExpense(ExpenseInfo expense, int id) {
-        Optional<ExpenseInfo> optionalExpenseInfo = expenseInfoRepo.findById(id);
-        String msg = "failed to update, invalid ID!!";
-        if(optionalExpenseInfo.isPresent()){
-            ExpenseInfo exp = optionalExpenseInfo.get();
-            exp.setExpenseName(expense.getExpenseName());
-            exp.setExpenseType(expense.getExpenseType());
-            exp.setDate(expense.getDate());
-            exp.setPrice(expense.getPrice());
-            expenseInfoRepo.save(exp);
-            msg = "successfully updated";
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(msg);
+    public ResponseEntity<String> updateExpense(ExpenseInfo expense, UUID id) {
+        User user = jwtUtil.getUserFromToken();
+        log.info("Updating expense for user : {}", user.getUsername());
+        ExpenseInfo expenseInfo = expenseInfoRepo.findByUserAndId(user, id)
+                .orElseThrow(() -> new ExpenseNotFoundException("Invalid ID, failed to update"));
+        expenseInfo.setExpenseName(expense.getExpenseName());
+        expenseInfo.setExpenseType(expense.getExpenseType());
+        expenseInfo.setUpdatedOn(LocalDateTime.now());
+        expenseInfo.setPrice(expense.getPrice());
+        expenseInfoRepo.save(expenseInfo);
+        log.info("End of updateExpense()");
+        return ResponseEntity.status(HttpStatus.OK).body("Expense updated successfully");
     }
 
-    public ResponseEntity<ExpenseInfo> getExpense(int id) {
-        Optional<ExpenseInfo> expense = expenseInfoRepo.findById(id);
-        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    public ResponseEntity<String> deleteExpense(UUID id) {
+        User user = jwtUtil.getUserFromToken();
+        log.info("Deleting expense for user : {}", user.getUsername());
+        ExpenseInfo expenseInfo = expenseInfoRepo.findByUserAndId(user, id)
+                .orElseThrow(() -> new ExpenseNotFoundException("Invalid ID, expense not found"));
+        expenseInfoRepo.deleteById(expenseInfo.getId());
+        log.info("End of deleteExpense()");
+        return ResponseEntity.status(HttpStatus.OK).body("Expense deleted successfully");
     }
 
-    public ResponseEntity<Object> deleteExpense(int id) {
-        Optional<ExpenseInfo> expenseInfo = expenseInfoRepo.findById(id);
-        if(expenseInfo.isPresent()){
-            ExpenseInfo expense = expenseInfo.get();
-            expenseInfoRepo.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body("Deleted successfully\n"+expense);
-        }else{
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Expense with ID: "+id+" not found");
-        }
-    }
+
+//    paginated
+//    public ResponseEntity<Page<ExpenseInfo>> getAllExpenseInPages(int page, int size) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        return ResponseEntity.status(HttpStatus.OK).body(expenseInfoRepo.findAll(pageable));
+//    }
 }
