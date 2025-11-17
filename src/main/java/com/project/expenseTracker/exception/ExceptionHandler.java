@@ -25,6 +25,16 @@ public class ExceptionHandler {
         return map;
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @org.springframework.web.bind.annotation.ExceptionHandler(UnauthorizedException.class)
+    public Map<String, String> handleExpenseNotFountException(UnauthorizedException ex) {
+
+        Map<String, String> map = new HashMap<>();
+        map.put("message", ex.getMessage());
+        map.put("timestamp", LocalDateTime.now().toString());
+        return map;
+    }
+
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, String> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
