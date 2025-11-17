@@ -12,7 +12,7 @@ import java.util.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/expenses")
+@RequestMapping("/api/v1/expenses")
 public class ExpenseInfoController {
 
     @Autowired
