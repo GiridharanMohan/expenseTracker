@@ -1,5 +1,6 @@
 package com.project.expenseTracker.controller;
 
+import com.project.expenseTracker.model.ExpenseDto;
 import com.project.expenseTracker.model.ExpenseInfo;
 import com.project.expenseTracker.service.ExpenseInfoService;
 import jakarta.validation.Valid;
@@ -19,12 +20,12 @@ public class ExpenseInfoController {
     ExpenseInfoService expenseInfoService;
 
     @GetMapping(value = "/")
-    public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
+    public ResponseEntity<List<ExpenseDto>> getAllExpense() {
         return expenseInfoService.getAllExpense();
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<ExpenseInfo> getExpense(@PathVariable UUID id) {
+    public ResponseEntity<ExpenseDto> getExpense(@PathVariable UUID id) {
         return expenseInfoService.getExpense(id);
     }
 
