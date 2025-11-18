@@ -1,11 +1,13 @@
 package com.project.expenseTracker.service;
 
 import com.project.expenseTracker.exception.ExpenseNotFoundException;
+import com.project.expenseTracker.model.ExpenseDto;
 import com.project.expenseTracker.model.ExpenseInfo;
 import com.project.expenseTracker.model.User;
 import com.project.expenseTracker.repository.ExpenseInfoRepo;
 import com.project.expenseTracker.repository.UserRepo;
 import com.project.expenseTracker.util.JwtUtil;
+import com.project.expenseTracker.util.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,18 +30,24 @@ public class ExpenseInfoService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public ResponseEntity<List<ExpenseInfo>> getAllExpense() {
+    @Autowired
+    private Util util;
+
+    public ResponseEntity<List<ExpenseDto>> getAllExpense() {
         User user = jwtUtil.getUserFromToken();
         log.info("Fetching all expense for user : {}", user.getUsername());
         List<ExpenseInfo> listOfExpenses = expenseInfoRepo.findAllExpenseByUser(user);
-        return ResponseEntity.status(HttpStatus.OK).body(listOfExpenses);
+        List<ExpenseDto> response = listOfExpenses.stream()
+                .map(expense -> util.toExpenseDto(expense))
+                .toList();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    public ResponseEntity<ExpenseInfo> getExpense(UUID id) {
+    public ResponseEntity<ExpenseDto> getExpense(UUID id) {
         User user = jwtUtil.getUserFromToken();
         log.info("Fetching expense for user : {}", user.getUsername());
         Optional<ExpenseInfo> expense = expenseInfoRepo.findByUserAndId(user, id);
-        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(expenseInfo)).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
+        return expense.map(expenseInfo -> ResponseEntity.status(HttpStatus.OK).body(util.toExpenseDto(expenseInfo))).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
     }
 
     public ResponseEntity<String> addExpense(ExpenseInfo expenseInfo) {
