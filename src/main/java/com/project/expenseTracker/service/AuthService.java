@@ -1,6 +1,5 @@
 package com.project.expenseTracker.service;
 
-import com.project.expenseTracker.model.EmailDetails;
 import com.project.expenseTracker.model.User;
 import com.project.expenseTracker.repository.UserRepo;
 import com.project.expenseTracker.util.EmailSender;
@@ -34,14 +33,16 @@ public class AuthService {
 
     public ResponseEntity<?> registerUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        log.info("checking existing user : {}", user.getEmail());
         if (userRepo.findByEmail(user.getEmail()).isPresent()) {
+            log.info("user already exists : {}", user.getEmail());
             return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists");
         }
         userRepo.save(user);
         String token = jwtUtil.generateToken(user.getEmail());
         //email generator
         emailSender.accountCreationEmailSender(user.getEmail(), user.getUsername());
-        log.info("new user added mail sent to user : {}", user.getUsername());
+        log.info("new user added, mail sent to user : {}", user.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "User Registered successfully", "token", token));
     }
 
