@@ -61,6 +61,6 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(email);
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token, "message", "Welcome "+user.get().getUsername()+"! You have logged in successfully."));
     }
 }
