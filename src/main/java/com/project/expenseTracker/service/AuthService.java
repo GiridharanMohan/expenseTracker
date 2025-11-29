@@ -40,9 +40,13 @@ public class AuthService {
         }
         userRepo.save(user);
         String token = jwtUtil.generateToken(user.getEmail());
-        //email generator
-        emailSender.accountCreationEmailSender(user.getEmail(), user.getUsername());
-        log.info("new user added, mail sent to user : {}", user.getEmail());
+        //getting exception on production server, because of free hosting limitations
+        try {
+            emailSender.accountCreationEmailSender(user.getEmail(), user.getUsername());
+            log.info("new user added, mail sent to user : {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Error sending email to {}: {}", user.getEmail(), e.getMessage());
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "User Registered successfully", "token", token));
     }
 
@@ -61,6 +65,6 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(email);
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token, "message", "Welcome " + user.get().getUsername() + "! You have logged in successfully."));
     }
 }
